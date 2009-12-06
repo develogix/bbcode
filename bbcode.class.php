@@ -7,7 +7,7 @@
  * @author          Matt Carroll <admin@develogix.com>
  * @copyright       Copyright 2004, 2005, 2006, 2007, 2008, 2009, Matt Carroll
  *                  http://gnu.org/copyleft/gpl.html GNU GPL
- * @version         $Id: bbcode.class.php,v 3.0.1 2009/12/05 20:54:55 logi Exp $
+ * @version         $Id: bbcode.class.php,v 3.0.1 2009/12/05 22:13:55 logi Exp $
  *
  * This version updates the class to PHP5, as well as implementing a new method of parsing.
  *
@@ -81,12 +81,27 @@ class bbcode {
             $this->bbImg();
 
             $this->str = '<p>'.$this->str.'</p>'."\n";
-            $match = array('#\r\n\r\n#msi', '#(?<!(</div>))\r\n#msi', '#(<(/)?p>)?<(/)?(div( class="(.*?)")?|ul|ol|li|h[1-6])>(<(/)?p>)?#msi', '#\n</p>#m', '#<ul>(.*?)</p>#msi');
-            $replace = array("\r\n", '</p>'."\r\n".'<p>', '<$3$4>', '', '<ul>$1');
+
+            $match = array(
+				'#\r\n\r\n#msi',
+				'#(?<!(</div>))\r\n#msi',
+				'#(<(/)?p>)?<(/)?(div( class="(.*?)")?|ul|ol|li|h[1-6])>(<(/)?p>)?#msi',
+				'#\n</p>#m',
+				'#<ul>(.*?)</p>#msi'
+				);
+            $replace = array(
+				"\r\n",
+				'</p>'."\r\n".'<p>',
+				'<$3$4>',
+				'',
+				'<ul>$1'
+				);
+				
             $this->str = preg_replace($match, $replace, $this->str);
 
             return substr($this->str, 0, strlen($this->str) - 1);
         }
+		else return NULL;
     }
 
     /**
@@ -143,11 +158,11 @@ class bbcode {
     private function bbList(){
         if($this->ls === TRUE){
             if($this->action === 'pre' OR $this->action === NULL){
-                $match = array(
+                $match     = array(
                     '#\[list\](.*?)\[/list\]#si',
                 '#\[\*\](.*?)\[/\*\]#si'
                 );
-                $replace = array(
+                $replace   = array(
                     '[list:'.$this->uid.']$1[/list:'.$this->uid.']',
                     '[*:'.$this->uid.']$1[/*:'.$this->uid.']'
                     );
@@ -155,13 +170,13 @@ class bbcode {
             }
 
             if($this->action === 'post' OR $this->action === NULL){
-                $match = array(
+                $match     = array(
                     '[list:'.$this->uid.']',
                     '[/list:'.$this->uid.']',
                     '[*:'.$this->uid.']',
                     '[/*:'.$this->uid.']'
                     );
-                $replace = array(
+                $replace   = array(
                     '<ul>',
                     '</ul>',
                     '<li>',
@@ -178,8 +193,24 @@ class bbcode {
     private function bbSimple(){
         if($this->simple === TRUE){
             if($this->action === 'pre' OR $this->action === NULL){
-                $match = array('#\[b\](.*?)\[/b\]#si', '#\[i\](.*?)\[/i\]#si', '#\[u\](.*?)\[/u\]#si', '#\[s\](.*?)\[/s\]#si', '#\[em\](.*?)\[/em\]#si', '#\[sup\](.*?)\[/sup\]#si', '#\[sub\](.*?)\[/sub\]#si');
-                $replace = array('[b:'.$this->uid.']$1[/b:'.$this->uid.']', '[i:'.$this->uid.']$1[/i:'.$this->uid.']', '[u:'.$this->uid.']$1[/u:'.$this->uid.']', '[s:'.$this->uid.']$1[/s:'.$this->uid.']', '[em:'.$this->uid.']$1[/em:'.$this->uid.']', '[sup:'.$this->uid.']$1[/sup:'.$this->uid.']', '[sub:'.$this->uid.']$1[/sub:'.$this->uid.']');
+                $match = array(
+					'#\[b\](.*?)\[/b\]#si',
+					'#\[i\](.*?)\[/i\]#si',
+					'#\[u\](.*?)\[/u\]#si',
+					'#\[s\](.*?)\[/s\]#si',
+					'#\[em\](.*?)\[/em\]#si',
+					'#\[sup\](.*?)\[/sup\]#si',
+					'#\[sub\](.*?)\[/sub\]#si'
+					);
+                $replace = array(
+					'[b:'.$this->uid.']$1[/b:'.$this->uid.']',
+					'[i:'.$this->uid.']$1[/i:'.$this->uid.']',
+					'[u:'.$this->uid.']$1[/u:'.$this->uid.']',
+					'[s:'.$this->uid.']$1[/s:'.$this->uid.']',
+					'[em:'.$this->uid.']$1[/em:'.$this->uid.']',
+					'[sup:'.$this->uid.']$1[/sup:'.$this->uid.']',
+					'[sub:'.$this->uid.']$1[/sub:'.$this->uid.']'
+					);
                 foreach($this->added AS $arr){
                     $match[]   = '#\['.$arr[0].'\](.*?)\[/'.$arr[0].'\]#si';
                     $replace[] = '['.$arr[0].':'.$this->uid.']$1[/'.$arr[0].':'.$this->uid.']';
@@ -188,8 +219,38 @@ class bbcode {
             }
 
             if($this->action === 'post' OR $this->action === NULL){
-                $match = array('[b:'.$this->uid.']', '[/b:'.$this->uid.']', '[i:'.$this->uid.']', '[/i:'.$this->uid.']', '[u:'.$this->uid.']', '[/u:'.$this->uid.']', '[s:'.$this->uid.']', '[/s:'.$this->uid.']', '[em:'.$this->uid.']', '[/em:'.$this->uid.']', '[sup:'.$this->uid.']', '[/sup:'.$this->uid.']', '[sub:'.$this->uid.']', '[/sub:'.$this->uid.']');
-                $replace = array('<strong>', '</strong>', '<em>', '</em>', '<span style="text-decoration: underline;">', '</span>', '<del>', '</del>', '<em>', '</em>', '<sup>', '</sup>', '<sub>', '</sub>');
+                $match = array(
+					'[b:'.$this->uid.']',
+					'[/b:'.$this->uid.']',
+					'[i:'.$this->uid.']',
+					'[/i:'.$this->uid.']',
+					'[u:'.$this->uid.']',
+					'[/u:'.$this->uid.']',
+					'[s:'.$this->uid.']',
+					'[/s:'.$this->uid.']',
+					'[em:'.$this->uid.']',
+					'[/em:'.$this->uid.']',
+					'[sup:'.$this->uid.']',
+					'[/sup:'.$this->uid.']',
+					'[sub:'.$this->uid.']',
+					'[/sub:'.$this->uid.']'
+					);
+                $replace = array(
+					'<strong>',
+					'</strong>',
+					'<em>',
+					'</em>',
+					'<span style="text-decoration: underline;">',
+					'</span>',
+					'<del>',
+					'</del>',
+					'<em>',
+					'</em>',
+					'<sup>',
+					'</sup>',
+					'<sub>',
+					'</sub>'
+					);
                 foreach($this->added AS $arr){
                     $match[]   = '['.$arr[0].':'.$this->uid.']';
                     $replace[] = $arr[1];
@@ -207,14 +268,26 @@ class bbcode {
     private function bbQuote(){
         if($this->quote === TRUE){
             if($this->action === 'pre' OR $this->action === NULL){
-                $match = array('#\[quote=(.*?)\](.*?)\[/quote\]#si', '#\[quote\](.*?)\[/quote\]#si');
-                $replace = array('[quote=$1:'.$this->uid.']$2[/quote:'.$this->uid.']', '[quote:'.$this->uid.']$1[/quote:'.$this->uid.']');
+                $match     = array(
+					'#\[quote=(.*?)\](.*?)\[/quote\]#si',
+					'#\[quote\](.*?)\[/quote\]#si'
+					);
+                $replace   = array('
+					[quote=$1:'.$this->uid.']$2[/quote:'.$this->uid.']',
+					'[quote:'.$this->uid.']$1[/quote:'.$this->uid.']'
+					);
                 $this->str = preg_replace($match, $replace, $this->str);
             }
 
             if($this->action === 'post' OR $this->action === NULL){
-                $match = array('#\[quote=(.*?):'.$this->uid.'\](.*?)\[/quote:'.$this->uid.'\]#si', '#\[quote:'.$this->uid.'\](.*?)\[/quote:'.$this->uid.'\]#si');
-                $replace = array('<blockquote><div><strong>Quoted from <em>$1</em></strong><br />$2</div></blockquote>', '<blockquote><div><strong>Quote</strong><br />$1</div></blockquote>');
+                $match     = array(
+					'#\[quote=(.*?):'.$this->uid.'\](.*?)\[/quote:'.$this->uid.'\]#si',
+					'#\[quote:'.$this->uid.'\](.*?)\[/quote:'.$this->uid.'\]#si'
+					);
+                $replace   = array(
+					'<blockquote><div><strong>Quoted from <em>$1</em></strong><br />$2</div></blockquote>',
+					'<blockquote><div><strong>Quote</strong><br />$1</div></blockquote>'
+					);
                 $this->str = preg_replace($match, $replace, $this->str);
             }
         }
@@ -227,14 +300,20 @@ class bbcode {
     private function bbMail(){
         if($this->mail === TRUE){
             if($this->action === 'pre' OR $this->action === NULL){
-                $match = array('#\[mail=([a-z0-9\-_.]+?@[\w\-]+\.([\w\-\.]+\.)?[\w]+)\](.*?)\[/mail\]#si', '#\[mail\]([a-z0-9\-_.]+?@[\w\-]+\.([\w\-\.]+\.)?[\w]+)\[/mail\]#si');
-                $replace = array('[mail=$1:'.$this->uid.']$2[/mail:'.$this->uid.']', '[mail=$1:'.$this->uid.']$1[/mail:'.$this->uid.']');
+                $match     = array(
+					'#\[mail=([a-z0-9\-_.]+?@[\w\-]+\.([\w\-\.]+\.)?[\w]+)\](.*?)\[/mail\]#si',
+					'#\[mail\]([a-z0-9\-_.]+?@[\w\-]+\.([\w\-\.]+\.)?[\w]+)\[/mail\]#si'
+					);
+                $replace   = array(
+					'[mail=$1:'.$this->uid.']$2[/mail:'.$this->uid.']',
+					'[mail=$1:'.$this->uid.']$1[/mail:'.$this->uid.']'
+					);
                 $this->str = preg_replace($match, $replace, $this->str);
             }
 
             if($this->action === 'post' OR $this->action === NULL){
-                $match = '#\[mail=([a-z0-9\-_.]+?@[\w\-]+\.([\w\-\.]+\.)?[\w]+):'.$this->uid.'\](.*?)\[/quote\]#si';
-                $replace = '<a href="mailto:$1">$2</a>';
+                $match     = '#\[mail=([a-z0-9\-_.]+?@[\w\-]+\.([\w\-\.]+\.)?[\w]+):'.$this->uid.'\](.*?)\[/quote\]#si';
+                $replace   = '<a href="mailto:$1">$2</a>';
                 $this->str = preg_replace($match, $replace, $this->str);
             }
         }
@@ -246,14 +325,29 @@ class bbcode {
     private function bbUrl(){
         if($this->url === TRUE){
             if($this->action === 'pre' OR $this->action === NULL){
-                $match = array('#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\/|www\.)(.+?)( |\n|\r|\t|\[|$)#si', '#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#is', '#\[url\]((www|ftp)\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\[/url\]#si', '#\[url=([a-z0-9]+://)([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\](.*?)\[/url\]#si', '#\[url=(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si');
-                $replace = array('[url:'.$this->uid.']$1$2$4[/url:'.$this->uid.']$5', '[url:'.$this->uid.']$1$2[/url:'.$this->uid.']', '[url:'.$this->uid.']http://$1[/url:'.$this->uid.']', '[url=$1$2:'.$this->uid.']$6[/url:'.$this->uid.']', '[url=http://$1:'.$this->uid.']$5[/url:'.$this->uid.']');
+                $match    = array(
+					'#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\/|www\.)(.+?)( |\n|\r|\t|\[|$)#si',
+					'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#is',
+					'#\[url\]((www|ftp)\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\[/url\]#si',
+					'#\[url=([a-z0-9]+://)([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\](.*?)\[/url\]#si',
+					'#\[url=(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si'
+					);
+                $replace   = array(
+					'[url:'.$this->uid.']$1$2$4[/url:'.$this->uid.']$5',
+					'[url:'.$this->uid.']$1$2[/url:'.$this->uid.']',
+					'[url:'.$this->uid.']http://$1[/url:'.$this->uid.']',
+					'[url=$1$2:'.$this->uid.']$6[/url:'.$this->uid.']',
+					'[url=http://$1:'.$this->uid.']$5[/url:'.$this->uid.']'
+					);
                 $this->str = preg_replace($match, $replace, $this->str);
             }
 
             if($this->action === 'post' OR $this->action === NULL){
-                $match = array('#\[url:'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si', '#\[url=(.*?):'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si');
-                $replace = array('<a href="$1">$1</a>', '<a href="$1">$2</a>');
+                $match = array(
+					'#\[url:'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si',
+					'#\[url=(.*?):'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si'
+					);
+                $replace   = array('<a href="$1">$1</a>', '<a href="$1">$2</a>');
                 $this->str = preg_replace($match, $replace, $this->str);
 
                 if(!function_exists('bbUrl2')){
@@ -280,14 +374,14 @@ class bbcode {
     private function bbImg(){
         if($this->img === TRUE OR $this->action === NULL){
             if($this->action === 'pre'){
-                $match = '#\[img\](.*?)\[\/img\]#si';
-                $replace = '[img:'.$this->uid.']$1[/img:'.$this->uid.']';
+                $match     = '#\[img\](.*?)\[\/img\]#si';
+                $replace   = '[img:'.$this->uid.']$1[/img:'.$this->uid.']';
                 $this->str = preg_replace($match, $replace, $this->str, $this->imgLimit);
             }
 
             if($this->action === 'post' OR $this->action === NULL){
-                $match = '#\[img:'.$this->uid.'\](.*?)\[/img:'.$this->uid.'\]#si';
-                $replace = '<img src="$1" />';
+                $match     = '#\[img:'.$this->uid.'\](.*?)\[/img:'.$this->uid.'\]#si';
+                $replace   = '<img src="$1" />';
                 $this->str = preg_replace($match, $replace, $this->str, $this->imgLimit);
             }   
         }
