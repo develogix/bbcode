@@ -5,7 +5,7 @@
  * identifier, for the purpose of saving resources, post-database.
  *
  * @author          Matt Carroll <admin@develogix.com>
- * @copyright       Copyright 2004, 2005, 2006, 2007, 2008, 2009, Matt Carroll
+ * @copyright       Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010, Matt Carroll
  *                  http://gnu.org/copyleft/gpl.html GNU GPL
  * @version         $Id: bbcode.class.php,v 3.0.1 2009/12/05 22:13:55 logi Exp $
  *
