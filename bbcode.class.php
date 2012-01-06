@@ -5,9 +5,9 @@
  * identifier, for the purpose of saving resources, post-database.
  *
  * @author        Matt Carroll <admin@develogix.com>
- * @copyright     Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010, Matt Carroll
+ * @copyright     Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Matt Carroll
  *                http://gnu.org/copyleft/gpl.html GNU GPL
- * @version       $Id: bbcode.class.php,v 3.0.2 2010/11/12 19:10:00 logi Exp $
+ * @version       $Id: bbcode.class.php,v 3.0.3 2012/01/06 13:10:00 GMT logi Exp $
  *
  * This version updates the class to PHP5, as well as implementing a new method of parsing.
  *
