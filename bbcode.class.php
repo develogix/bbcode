@@ -57,7 +57,7 @@ class bbcode {
 	 */
 	public function parse($str, $action = NULL, $uid = NULL){
 		$this->str    = $str;
-		$this->action = ($action !== 'pre' OR $action !== 'post') $action = NULL;
+		$this->action = ($action !== 'pre' OR $action !== 'post') ? NULL : $action;
 		$this->uid    = (($uid === NULL AND $this->action === 'pre' OR $this->action === NULL) ? $this->makeUID() : (($this->action === 'post' AND (strlen($uid) === 8)) ? $uid : NULL));
 
 		if($this->action === 'pre'){
