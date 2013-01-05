@@ -7,7 +7,7 @@
  * @author        Matt Carroll <admin@develogix.com>
  * @copyright     Copyright 2004-2013 Matt Carroll
  *                http://gnu.org/copyleft/gpl.html GNU GPL
- * @version       $Id: bbcode.class.php,v 3.0.4 2013/01/05 20:40:00 GMT develogix Exp $
+ * @version       $Id: bbcode.class.php,v 3.0.5 2013/01/05 21:00:00 GMT develogix Exp $
  *
  * This version updates the class to PHP5, as well as implementing a new method of parsing.
  *
@@ -125,8 +125,9 @@ class bbcode {
 	 * @param tag    opening and closing bbcode tag
 	 * @param before text that goes in place of [$tag]
 	 * @param after  text that goes in place of [/$tag]
+	 * @param tabs   amount of tabs to place in front of @before
 	 */
-	public function addSimple($tag, $before, $after, $tabs){
+	public function addSimple($tag, $before, $after, $tabs = 0){
 		$this->added[] = array($tag, $before, $after, $tabs);
 	}
 
@@ -260,7 +261,7 @@ class bbcode {
 					);
 				foreach($this->added AS $arr){
 					$match[]   = '['.$arr[0].':'.$this->uid.']';
-					$replace[] = $arr[1];
+					$replace[] = str_repeat("\t", $arr[3]) + $arr[1];
 					$match[]   = '[/'.$arr[0].':'.$this->uid.']';
 					$replace[] = $arr[2];
 				}
