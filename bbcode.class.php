@@ -17,9 +17,9 @@
  *
  * private @param added     array holding added simple tags and data 
  *
- * private @param geshi     true to allow bbGeshi, false to disallow
- * private @param ls        true to allow bbList, false to disallow
+ * private @param list      true to allow bbList, false to disallow
  * private @param simple    true to allow bbSimple, false to disallow
+ * private @param abbr      true to allow bbAbbr, false to disallow
  * private @param quote     true to allow bbQuote, false to disallow
  * private @param mail      true to allow bbMail, false to disallow
  * private @param url       true to allow bbUrl, false to disallow
