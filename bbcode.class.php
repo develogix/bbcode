@@ -34,7 +34,7 @@ class bbcode {
 
 	private $added    = array();
 
-	private $geshi    = TRUE;
+	private $geshi    = FALSE;
 	private $ls       = TRUE;
 	private $simple   = TRUE;
 	private $quote    = TRUE;
@@ -159,13 +159,14 @@ class bbcode {
 		if($this->ls === TRUE){
 			if($this->action === 'pre' OR $this->action === NULL){
 				$match	 = array(
-						'#\[list\](.*?)\[/list\]#si',
-						'#\[\*\](.*?)\[/\*\]#si'
+						'#\[list\](.*?)\[\/list\]#is',
+						'#\[li\](.*?)\[\/li\]#is'
 					);
 				$replace   = array(
 						'[list:'.$this->uid.']$1[/list:'.$this->uid.']',
-						'[*:'.$this->uid.']$1[/*:'.$this->uid.']'
+						'[li:'.$this->uid.']$1[/li:'.$this->uid.']'
 					);
+
 				$this->str = preg_replace($match, $replace, $this->str);
 			}
 
@@ -173,8 +174,8 @@ class bbcode {
 				$match	 = array(
 						'[list:'.$this->uid.']',
 						'[/list:'.$this->uid.']',
-						'[*:'.$this->uid.']',
-						'[/*:'.$this->uid.']'
+						'[li:'.$this->uid.']',
+						'[/li:'.$this->uid.']'
 					);
 				$replace   = array(
 						'<ul>',
@@ -387,4 +388,3 @@ class bbcode {
 		}
 	}
 }
-?>
