@@ -102,14 +102,14 @@ class bbcode {
 				'#(?<!(</div>))\r\n#msi',
 				'#(<(/)?p>)?<(/)?(div( class="(.*?)")?|ul|ol|li|h[1-6])>(<(/)?p>)?#msi',
 				'#\n</p>#m',
-				'#<ul>(.*?)</p>#msi'
+				'#<(ul|ol)>(.*?)</p>#msi'
 				);
 			$replace = array(
 				"\r\n",
 				'</p>'."\r\n".'<p>',
 				'<$3$4>',
 				'',
-				'<ul>$1'
+				'<$1>$2'
 				);
 				
 			$this->str = preg_replace($match, $replace, $this->str);
