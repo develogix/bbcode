@@ -5,9 +5,9 @@
  * identifier, for the purpose of saving resources, post-database.
  *
  * @author        Matt Carroll <admin@develogix.com>
- * @copyright     Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Matt Carroll
+ * @copyright     Copyright 2004-2013 Matt Carroll
  *                http://gnu.org/copyleft/gpl.html GNU GPL
- * @version       $Id: bbcode.class.php,v 3.0.3 2012/01/06 13:10:00 GMT logi Exp $
+ * @version       $Id: bbcode.class.php,v 3.0.3 2013/01/05 13:10:00 GMT develogix Exp $
  *
  * This version updates the class to PHP5, as well as implementing a new method of parsing.
  *
@@ -29,14 +29,14 @@
  */
 class bbcode {
 	private $str      = "";
-	public  $uid      = NULL;
+	private $uid      = NULL;
 	private $action   = NULL;
 
 	private $added    = array();
 
-	private $geshi    = FALSE;
-	private $ls       = TRUE;
+	private $list     = TRUE;
 	private $simple   = TRUE;
+	private $abbr     = TRUE;
 	private $quote    = TRUE;
 	private $mail     = TRUE;
 	private $url      = TRUE;
@@ -46,6 +46,21 @@ class bbcode {
 
 	public function __construct(){
 
+	}
+
+	/**
+	 * @return uid generated unique identifier with a length of 8 characters
+	 */
+	private function makeUID(){
+		$this->uid = substr(md5(mt_rand()), 0, 8);
+		return $this->uid;
+	}
+	
+	/**
+	 * @return uid stored generated unique identifier with a length of 8 characters
+	 */
+	public function getUID(){
+		return $this->uid;
 	}
 
 	/**
@@ -61,9 +76,9 @@ class bbcode {
 		$this->uid    = (($uid === NULL AND $this->action === 'pre' OR $this->action === NULL) ? $this->makeUID() : (($this->action === 'post' AND (strlen($uid) === 8)) ? $uid : NULL));
 
 		if($this->action === 'pre'){
-			$this->bbGeshi();
 			$this->bbList();
 			$this->bbSimple();
+			$this->bbAbbr();
 			$this->bbQuote();
 			$this->bbMail();
 			$this->bbUrl();
@@ -72,9 +87,9 @@ class bbcode {
 			return $this->str;
 		}
 		else if($this->action === 'post' OR $this->action === NULL){
-			$this->bbGeshi();
 			$this->bbList();
 			$this->bbSimple();
+			$this->bbAbbr();
 			$this->bbQuote();
 			$this->bbMail();
 			$this->bbUrl();
@@ -138,51 +153,42 @@ class bbcode {
 	}
 
 	/**
-	 * @return uid generated unique identifier with a length of 8 characters
-	 */
-	private function makeUID(){
-		return substr(md5(mt_rand()), 0, 8);
-	}
-
-	/**
-	 * TODO
-	 * - implement
-	 */
-	private function bbGeshi(){
-
-	}
-
-	/**
 	 * parses string for [list], [*]
 	 */
 	private function bbList(){
-		if($this->ls === TRUE){
+		if($this->list === TRUE){
 			if($this->action === 'pre' OR $this->action === NULL){
 				$match	 = array(
-						'#\[list\](.*?)\[\/list\]#is',
-						'#\[li\](.*?)\[\/li\]#is'
-					);
+					'#\[list\](.*?)\[\/list\]#is',
+					'#\[olist\](.*?)\[\/olist\]#is',
+					'#\[\*\](.*?)\[\/\*\]#is'
+				);
 				$replace   = array(
-						'[list:'.$this->uid.']$1[/list:'.$this->uid.']',
-						'[li:'.$this->uid.']$1[/li:'.$this->uid.']'
-					);
+					'[list:'.$this->uid.']$1[/list:'.$this->uid.']',
+					'[olist:'.$this->uid.']$1[/olist:'.$this->uid.']',
+					'[*:'.$this->uid.']$1[/*:'.$this->uid.']'
+				);
 
 				$this->str = preg_replace($match, $replace, $this->str);
 			}
 
 			if($this->action === 'post' OR $this->action === NULL){
 				$match	 = array(
-						'[list:'.$this->uid.']',
-						'[/list:'.$this->uid.']',
-						'[li:'.$this->uid.']',
-						'[/li:'.$this->uid.']'
-					);
+					'[list:'.$this->uid.']',
+					'[/list:'.$this->uid.']',
+					'[olist:'.$this->uid.']',
+					'[/olist:'.$this->uid.']',
+					'[*:'.$this->uid.']',
+					'[/*:'.$this->uid.']'
+				);
 				$replace   = array(
-						'<ul>',
-						'</ul>',
-						'<li>',
-						'</li>'
-					);
+					'<ul>',
+					'</ul>',
+					'<ol>',
+					'</ol>',
+					'<li>',
+					'</li>'
+				);
 				$this->str = str_replace($match, $replace, $this->str);
 			}
 		}
@@ -262,6 +268,37 @@ class bbcode {
 			}
 		}
 	}
+	
+	/**
+	 * parses string for [abbr=*] and [abbr]
+	 */
+	private function bbAbbr(){
+		if($this->abbr === TRUE){
+			if($this->action === 'pre' OR $this->action === NULL){
+				$match	 = array(
+						'#\[abbr=(.*?)\](.*?)\[/abbr\]#si',
+						'#\[abbr\](.*?)\[/abbr\]#si'
+					);
+				$replace   = array('
+						[abbr=$1:'.$this->uid.']$2[/abbr:'.$this->uid.']',
+						'[abbr:'.$this->uid.']$1[/abbr:'.$this->uid.']'
+					);
+				$this->str = preg_replace($match, $replace, $this->str);
+			}
+
+			if($this->action === 'post' OR $this->action === NULL){
+				$match	 = array(
+						'#\[abbr=(.*?):'.$this->uid.'\](.*?)\[/abbr:'.$this->uid.'\]#si',
+						'#\[abbr:'.$this->uid.'\](.*?)\[/abbr:'.$this->uid.'\]#si'
+					);
+				$replace   = array(
+						'<abbr title="$1">$2</abbr>',
+						'<abbr>$1</abbr>'
+					);
+				$this->str = preg_replace($match, $replace, $this->str);
+			}
+		}
+	}
 
 	/**
 	 * parses string for [quote=*] and [quote]
@@ -327,7 +364,7 @@ class bbcode {
 		if($this->url === TRUE){
 			if($this->action === 'pre' OR $this->action === NULL){
 				$match	= array(
-						'#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\/|www\.)(.+?)( |\n|\r|\t|\[|$)#si',
+						'#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\www\.)(.+?)( |\n|\r|\t|\[|$)#si',
 						'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#is',
 						'#\[url\]((www|ftp)\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\[/url\]#si',
 						'#\[url=([a-z0-9]+://)([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\](.*?)\[/url\]#si',
@@ -388,3 +425,4 @@ class bbcode {
 		}
 	}
 }
+?>
