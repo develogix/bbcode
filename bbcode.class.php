@@ -366,7 +366,7 @@ class bbcode {
 			if($this->action === 'pre' OR $this->action === NULL){
 				$match	= array(
 						'#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\www\.)(.+?)( |\n|\r|\t|\[|$)#si',
-						'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#is',
+						'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#si',
 						'#\[url\]((www|ftp)\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\[/url\]#si',
 						'#\[url=([a-z0-9]+://)([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\](.*?)\[/url\]#si',
 						'#\[url=(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si'
@@ -386,7 +386,10 @@ class bbcode {
 						'#\[url:'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si',
 						'#\[url=(.*?):'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si'
 					);
-				$replace   = array('<a href="$1">$1</a>', '<a href="$1">$2</a>');
+				$replace   = array(
+						'<a href="$1">$1</a>',
+						'<a href="$1">$2</a>'
+					);
 				$this->str = preg_replace($match, $replace, $this->str);
 
 				if(!function_exists('bbUrl2')){
