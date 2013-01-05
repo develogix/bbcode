@@ -280,8 +280,8 @@ class bbcode {
 						'#\[abbr=(.*?)\](.*?)\[/abbr\]#si',
 						'#\[abbr\](.*?)\[/abbr\]#si'
 					);
-				$replace   = array('
-						[abbr=$1:'.$this->uid.']$2[/abbr:'.$this->uid.']',
+				$replace   = array(
+						'[abbr=$1:'.$this->uid.']$2[/abbr:'.$this->uid.']',
 						'[abbr:'.$this->uid.']$1[/abbr:'.$this->uid.']'
 					);
 				$this->str = preg_replace($match, $replace, $this->str);
