@@ -47,6 +47,87 @@ class bbcode {
 	public function __construct(){
 
 	}
+	/* 
+ @param $string : la chaîne qui doit subir les modifications
+ @param $o : pattern de l'élément ouvrant (les méta-caractères doivent-être echappés)
+ @param $c : pattern de l'élément fermant (idem, echapper les méta-caractères)
+ @param $callbackFunction : function de rappel qui sera appliquée sur chaque chaînes comprises entre $o et $c
+*/
+function recursiveReplaceElements($string, $o, $c, $callbackFunction)
+{
+	// Captures des tags et leurs positions dans la chaîne
+	if( !preg_match_all('`(?:' . $o . '|' . $c . ')`', $string, $m, PREG_OFFSET_CAPTURE) )
+ 	return $string;
+        
+	// Construction d'un array à 2 dimensions regroupant chaque blocs de 1er niveaux
+	// Et leurs niveaux d'imbrications
+	$i = 0;
+	$level = 0;
+	$last = null;
+	$arrPieces= array();
+	foreach( $m[0] as $values )
+	{
+		// $values[0] => tag ouvrant|fermant
+		// $values[1] => position du tag dans la chaîne
+    
+		// Tags ouvrants
+		if ( strpos($values[0], '/') === false )
+		{
+			if( $last == 'start' )
+			$level--;
+			$arrPieces[$i][$level]['start'] = $values[1];
+			$last = 'start';
+		}
+		else
+		{            
+			if( $last == 'end' )
+			$level++;
+			$arrPieces[$i][$level]['end'] = $values[1];
+			$last = 'end';
+		}
+		if( $level == 0 && $last == 'end' )
+		{
+			ksort($arrPieces[$i]);
+			$i++;
+		}
+	}
+	// Pas autant de tags fermants que d'ouvrants...
+	if( $level !== 0 )
+	{
+		return $string;
+	}
+    
+	$lengthCloseTag = strlen(stripslashes($c)); // longueur du tag fermant
+
+	// Remplacements des éléments de sous-niveaux dans chaque niveaux supérieurs
+	$elementsTopLvl = array();
+	$replacementsTopLvl = array();
+	foreach( $arrPieces as $key => $blocks )
+	{
+		$lastPiece = $lastPieceReplacement = null;
+        
+		foreach( $blocks as $lvl => $pos )
+		{
+			// Extraction du bloc de la chaîne
+			$piece = substr($string, $pos['start'], $pos['end'] + $lengthCloseTag - $pos['start']);
+
+            		// Remplacements
+            		if( $lastPieceReplacement !== null ) // Si éléments de niveaux inférieurs
+                		$lastPieceReplacement = preg_replace_callback('`^' . $o . '(.+)' . $c . '$`s', 'liste', str_replace($lastPiece, $lastPieceReplacement, $piece));
+			else // Niveau le plus profond
+				$lastPieceReplacement = preg_replace_callback('`^' . $o . '(.+)' . $c . '$`s', 'liste', $piece);
+				$lastPiece = $piece;
+            
+			if( $lvl == 0 )
+			{
+				$elementsTopLvl[] = $piece;
+				$replacementsTopLvl[] = $lastPieceReplacement;
+            		}
+        	}
+	}
+	$string = str_replace($elementsTopLvl, $replacementsTopLvl, $string);
+	return $string;
+}
 
 	/**
 	 * @return uid generated unique identifier with a length of 8 characters
