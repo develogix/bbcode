@@ -27,16 +27,16 @@
  *   
  * private @param imgLimit  amount of images to be parsed (-1 for unlimited)
  */
-class bbcode {
+class BBCode {
 	private $str      = "";
-	public  $uid      = NULL;
+	private $uid      = NULL;
 	private $action   = NULL;
 
 	private $added    = array();
 
-	private $geshi    = FALSE;
-	private $ls       = TRUE;
+	private $list     = TRUE;
 	private $simple   = TRUE;
+	private $abbr     = TRUE;
 	private $quote    = TRUE;
 	private $mail     = TRUE;
 	private $url      = TRUE;
@@ -46,6 +46,21 @@ class bbcode {
 
 	public function __construct(){
 
+	}
+
+	/**
+	 * @return uid generated unique identifier with a length of 8 characters
+	 */
+	private function makeUID(){
+		$this->uid = substr(md5(mt_rand()), 0, 8);
+		return $this->uid;
+	}
+	
+	/**
+	 * @return uid stored generated unique identifier with a length of 8 characters
+	 */
+	public function getUID(){
+		return $this->uid;
 	}
 
 	/**
@@ -61,9 +76,9 @@ class bbcode {
 		$this->uid    = (($uid === NULL AND $this->action === 'pre' OR $this->action === NULL) ? $this->makeUID() : (($this->action === 'post' AND (strlen($uid) === 8)) ? $uid : NULL));
 
 		if($this->action === 'pre'){
-			$this->bbGeshi();
 			$this->bbList();
 			$this->bbSimple();
+			$this->bbAbbr();
 			$this->bbQuote();
 			$this->bbMail();
 			$this->bbUrl();
@@ -72,9 +87,9 @@ class bbcode {
 			return $this->str;
 		}
 		else if($this->action === 'post' OR $this->action === NULL){
-			$this->bbGeshi();
 			$this->bbList();
 			$this->bbSimple();
+			$this->bbAbbr();
 			$this->bbQuote();
 			$this->bbMail();
 			$this->bbUrl();
@@ -87,19 +102,19 @@ class bbcode {
 				'#(?<!(</div>))\r\n#msi',
 				'#(<(/)?p>)?<(/)?(div( class="(.*?)")?|ul|ol|li|h[1-6])>(<(/)?p>)?#msi',
 				'#\n</p>#m',
-				'#<ul>(.*?)</p>#msi'
+				'#<(ul|ol)>(.*?)</p>#msi'
 				);
 			$replace = array(
 				"\r\n",
 				'</p>'."\r\n".'<p>',
 				'<$3$4>',
 				'',
-				'<ul>$1'
+				'<$1>$2'
 				);
 				
 			$this->str = preg_replace($match, $replace, $this->str);
 
-			return substr($this->str, 0, strlen($this->str) - 1);
+			return nl2br(substr($this->str, 0, strlen($this->str) - 1));
 		}
 		else return NULL;
 	}
@@ -110,8 +125,9 @@ class bbcode {
 	 * @param tag    opening and closing bbcode tag
 	 * @param before text that goes in place of [$tag]
 	 * @param after  text that goes in place of [/$tag]
+	 * @param tabs   amount of tabs to place in front of @before
 	 */
-	public function addSimple($tag, $before, $after, $tabs){
+	public function addSimple($tag, $before, $after, $tabs = 0){
 		$this->added[] = array($tag, $before, $after, $tabs);
 	}
 
@@ -138,51 +154,42 @@ class bbcode {
 	}
 
 	/**
-	 * @return uid generated unique identifier with a length of 8 characters
-	 */
-	private function makeUID(){
-		return substr(md5(mt_rand()), 0, 8);
-	}
-
-	/**
-	 * TODO
-	 * - implement
-	 */
-	private function bbGeshi(){
-
-	}
-
-	/**
 	 * parses string for [list], [*]
 	 */
 	private function bbList(){
-		if($this->ls === TRUE){
+		if($this->list === TRUE){
 			if($this->action === 'pre' OR $this->action === NULL){
 				$match	 = array(
-						'#\[list\](.*?)\[\/list\]#is',
-						'#\[li\](.*?)\[\/li\]#is'
-					);
+					'#\[list\](.*?)\[\/list\]#is',
+					'#\[olist\](.*?)\[\/olist\]#is',
+					'#\[\*\](.*?)\[\/\*\]#is'
+				);
 				$replace   = array(
-						'[list:'.$this->uid.']$1[/list:'.$this->uid.']',
-						'[li:'.$this->uid.']$1[/li:'.$this->uid.']'
-					);
+					'[list:'.$this->uid.']$1[/list:'.$this->uid.']',
+					'[olist:'.$this->uid.']$1[/olist:'.$this->uid.']',
+					'[*:'.$this->uid.']$1[/*:'.$this->uid.']'
+				);
 
 				$this->str = preg_replace($match, $replace, $this->str);
 			}
 
 			if($this->action === 'post' OR $this->action === NULL){
 				$match	 = array(
-						'[list:'.$this->uid.']',
-						'[/list:'.$this->uid.']',
-						'[li:'.$this->uid.']',
-						'[/li:'.$this->uid.']'
-					);
+					'[list:'.$this->uid.']',
+					'[/list:'.$this->uid.']',
+					'[olist:'.$this->uid.']',
+					'[/olist:'.$this->uid.']',
+					'[*:'.$this->uid.']',
+					'[/*:'.$this->uid.']'
+				);
 				$replace   = array(
-						'<ul>',
-						'</ul>',
-						'<li>',
-						'</li>'
-					);
+					'<ul>',
+					'</ul>',
+					'<ol>',
+					'</ol>',
+					'<li>',
+					'</li>'
+				);
 				$this->str = str_replace($match, $replace, $this->str);
 			}
 		}
@@ -201,7 +208,9 @@ class bbcode {
 						'#\[s\](.*?)\[/s\]#si',
 						'#\[em\](.*?)\[/em\]#si',
 						'#\[sup\](.*?)\[/sup\]#si',
-						'#\[sub\](.*?)\[/sub\]#si'
+						'#\[sub\](.*?)\[/sub\]#si',
+						'#\[center\](.*?)\[/center\]#si',
+						'#\[left\](.*?)\[/left\]#si'
 					);
 				$replace = array(
 						'[b:'.$this->uid.']$1[/b:'.$this->uid.']',
@@ -210,7 +219,9 @@ class bbcode {
 						'[s:'.$this->uid.']$1[/s:'.$this->uid.']',
 						'[em:'.$this->uid.']$1[/em:'.$this->uid.']',
 						'[sup:'.$this->uid.']$1[/sup:'.$this->uid.']',
-						'[sub:'.$this->uid.']$1[/sub:'.$this->uid.']'
+						'[sub:'.$this->uid.']$1[/sub:'.$this->uid.']',
+						'[center:'.$this->uid.']$1[/center:'.$this->uid.']',
+						'[left:'.$this->uid.']$1[/left:'.$this->uid.']'
 					);
 				foreach($this->added AS $arr){
 					$match[]   = '#\['.$arr[0].'\](.*?)\[/'.$arr[0].'\]#si';
@@ -234,7 +245,11 @@ class bbcode {
 						'[sup:'.$this->uid.']',
 						'[/sup:'.$this->uid.']',
 						'[sub:'.$this->uid.']',
-						'[/sub:'.$this->uid.']'
+						'[/sub:'.$this->uid.']',
+						'[center:'.$this->uid.']',
+						'[/center:'.$this->uid.']',
+						'[left:'.$this->uid.']',
+						'[/left:'.$this->uid.']'
 					);
 				$replace = array(
 						'<strong>',
@@ -250,15 +265,50 @@ class bbcode {
 						'<sup>',
 						'</sup>',
 						'<sub>',
-						'</sub>'
+						'</sub>',
+						'<div class="align-center">',
+						'</div>',
+						'<div class="align-left">',
+						'</div>'
 					);
 				foreach($this->added AS $arr){
 					$match[]   = '['.$arr[0].':'.$this->uid.']';
-					$replace[] = $arr[1];
+					$replace[] = str_repeat("\t", $arr[3]) + $arr[1];
 					$match[]   = '[/'.$arr[0].':'.$this->uid.']';
 					$replace[] = $arr[2];
 				}
 				$this->str = str_replace($match, $replace, $this->str);
+			}
+		}
+	}
+	
+	/**
+	 * parses string for [abbr=*] and [abbr]
+	 */
+	private function bbAbbr(){
+		if($this->abbr === TRUE){
+			if($this->action === 'pre' OR $this->action === NULL){
+				$match	 = array(
+						'#\[abbr=(.*?)\](.*?)\[/abbr\]#si',
+						'#\[abbr\](.*?)\[/abbr\]#si'
+					);
+				$replace   = array(
+						'[abbr=$1:'.$this->uid.']$2[/abbr:'.$this->uid.']',
+						'[abbr:'.$this->uid.']$1[/abbr:'.$this->uid.']'
+					);
+				$this->str = preg_replace($match, $replace, $this->str);
+			}
+
+			if($this->action === 'post' OR $this->action === NULL){
+				$match	 = array(
+						'#\[abbr=(.*?):'.$this->uid.'\](.*?)\[/abbr:'.$this->uid.'\]#si',
+						'#\[abbr:'.$this->uid.'\](.*?)\[/abbr:'.$this->uid.'\]#si'
+					);
+				$replace   = array(
+						'<abbr title="$1">$2</abbr>',
+						'<abbr>$1</abbr>'
+					);
+				$this->str = preg_replace($match, $replace, $this->str);
 			}
 		}
 	}
@@ -327,8 +377,8 @@ class bbcode {
 		if($this->url === TRUE){
 			if($this->action === 'pre' OR $this->action === NULL){
 				$match	= array(
-						'#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\/|www\.)(.+?)( |\n|\r|\t|\[|$)#si',
-						'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#is',
+						'#(?<!(\]|=|\/))((http|https|ftp|irc|telnet|gopher|afs)\:\/\www\.)(.+?)( |\n|\r|\t|\[|$)#si',
+						'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#si',
 						'#\[url\]((www|ftp)\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\[/url\]#si',
 						'#\[url=([a-z0-9]+://)([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\](.*?)\[/url\]#si',
 						'#\[url=(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si'
@@ -348,15 +398,18 @@ class bbcode {
 						'#\[url:'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si',
 						'#\[url=(.*?):'.$this->uid.'\](.*?)\[/url:'.$this->uid.'\]#si'
 					);
-				$replace   = array('<a href="$1">$1</a>', '<a href="$1">$2</a>');
+				$replace   = array(
+						'<a href="$1">$1</a>',
+						'<a href="$1">$2</a>'
+					);
 				$this->str = preg_replace($match, $replace, $this->str);
 
-				if(!function_exists('bbUrl2')){
+				/*if(!function_exists('bbUrl2')){
 					function bbUrl2($matches){
 						return '<a href="'.str_replace('&', '&amp;', str_replace('&amp;', '&', $matches[1])).'">';
 					}
-				}
-				$this->str = preg_replace_callback('#<a href="(.*?)">#si', 'bbUrl2' /*array($this, bbUrl2)*/ , $this->str);
+				}*/
+				$this->str = preg_replace_callback('#<a href="(.*?)">#si', 'self::bbUrl2' /*array($this, bbUrl2)*/ , $this->str);
 			}
 		}
 	}
