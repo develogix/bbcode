@@ -7,7 +7,7 @@
  * @author        Matt Carroll <admin@develogix.com>
  * @copyright     Copyright 2004-2013 Matt Carroll
  *                http://gnu.org/copyleft/gpl.html GNU GPL
- * @version       $Id: bbcode.class.php,v 3.0.5 2013/01/05 21:15:00 GMT develogix Exp $
+ * @version       $Id: bbcode.class.php,v 3.1.0 2013/02/10 07:20:00 GMT develogix Exp $
  *
  * This version updates the class to PHP5, as well as implementing a new method of parsing.
  *
