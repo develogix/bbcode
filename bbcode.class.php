@@ -1,13 +1,16 @@
 <?php
+
+namespace Rms\HomeBundle\Service;
+
 /**
  * This is a class that is used to parse a string and format it
  * for BBCode. This class implements the use of a unique
  * identifier, for the purpose of saving resources, post-database.
  *
- * @author        Matt Carroll <admin@develogix.com>
- * @copyright     Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Matt Carroll
+ * @author        Matt Carroll <admin@develogix.com> + remontees <remontees@free.fr>
+ * @copyright     Copyright 2004-2013 Matt Carroll
  *                http://gnu.org/copyleft/gpl.html GNU GPL
- * @version       $Id: bbcode.class.php,v 3.0.3 2012/01/06 13:10:00 GMT logi Exp $
+ * @version       $Id: bbcode.class.php,v 3.1.0 2013/02/10 07:20:00 GMT develogix Exp $
  *
  * This version updates the class to PHP5, as well as implementing a new method of parsing.
  *
@@ -17,9 +20,9 @@
  *
  * private @param added     array holding added simple tags and data 
  *
- * private @param geshi     true to allow bbGeshi, false to disallow
- * private @param ls        true to allow bbList, false to disallow
+ * private @param list      true to allow bbList, false to disallow
  * private @param simple    true to allow bbSimple, false to disallow
+ * private @param abbr      true to allow bbAbbr, false to disallow
  * private @param quote     true to allow bbQuote, false to disallow
  * private @param mail      true to allow bbMail, false to disallow
  * private @param url       true to allow bbUrl, false to disallow
@@ -162,12 +165,12 @@ class BBCode {
 				$match	 = array(
 					'#\[list\](.*?)\[\/list\]#is',
 					'#\[olist\](.*?)\[\/olist\]#is',
-					'#\[\*\](.*?)\[\/\*\]#is'
+					'#\n?\[li\](.*?)\[\/li\]\n#is'
 				);
 				$replace   = array(
 					'[list:'.$this->uid.']$1[/list:'.$this->uid.']',
 					'[olist:'.$this->uid.']$1[/olist:'.$this->uid.']',
-					'[*:'.$this->uid.']$1[/*:'.$this->uid.']'
+					'[li:'.$this->uid.']$1[/li:'.$this->uid.']'
 				);
 
 				$this->str = preg_replace($match, $replace, $this->str);
@@ -179,8 +182,8 @@ class BBCode {
 					'[/list:'.$this->uid.']',
 					'[olist:'.$this->uid.']',
 					'[/olist:'.$this->uid.']',
-					'[*:'.$this->uid.']',
-					'[/*:'.$this->uid.']'
+					'[li:'.$this->uid.']',
+					'[/li:'.$this->uid.']'
 				);
 				$replace   = array(
 					'<ul>',
@@ -210,7 +213,9 @@ class BBCode {
 						'#\[sup\](.*?)\[/sup\]#si',
 						'#\[sub\](.*?)\[/sub\]#si',
 						'#\[center\](.*?)\[/center\]#si',
-						'#\[left\](.*?)\[/left\]#si'
+						'#\[left\](.*?)\[/left\]#si',
+						'#\[h1\](.*?)\[/h1\]#si',
+						'#\[h2\](.*?)\[/h2\]#si'
 					);
 				$replace = array(
 						'[b:'.$this->uid.']$1[/b:'.$this->uid.']',
@@ -221,7 +226,9 @@ class BBCode {
 						'[sup:'.$this->uid.']$1[/sup:'.$this->uid.']',
 						'[sub:'.$this->uid.']$1[/sub:'.$this->uid.']',
 						'[center:'.$this->uid.']$1[/center:'.$this->uid.']',
-						'[left:'.$this->uid.']$1[/left:'.$this->uid.']'
+						'[left:'.$this->uid.']$1[/left:'.$this->uid.']',
+						'[h1:'.$this->uid.']$1[/h1:'.$this->uid.']',
+						'[h2:'.$this->uid.']$1[/h2:'.$this->uid.']'
 					);
 				foreach($this->added AS $arr){
 					$match[]   = '#\['.$arr[0].'\](.*?)\[/'.$arr[0].'\]#si';
@@ -249,7 +256,11 @@ class BBCode {
 						'[center:'.$this->uid.']',
 						'[/center:'.$this->uid.']',
 						'[left:'.$this->uid.']',
-						'[/left:'.$this->uid.']'
+						'[/left:'.$this->uid.']',
+						'[h1:'.$this->uid.']',
+						'[/h1:'.$this->uid.']',
+						'[h2:'.$this->uid.']',
+						'[/h2:'.$this->uid.']',
 					);
 				$replace = array(
 						'<strong>',
@@ -269,7 +280,11 @@ class BBCode {
 						'<div class="align-center">',
 						'</div>',
 						'<div class="align-left">',
-						'</div>'
+						'</div>',
+						'<h1>',
+						'</h1>',
+						'<h2>',
+						'</h2>'
 					);
 				foreach($this->added AS $arr){
 					$match[]   = '['.$arr[0].':'.$this->uid.']';
@@ -381,14 +396,17 @@ class BBCode {
 						'#\[url\]([a-z0-9]+?://){1}([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\[/url\]#si',
 						'#\[url\]((www|ftp)\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\[/url\]#si',
 						'#\[url=([a-z0-9]+://)([\w\-]+\.([\w\-]+\.)*[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*?)?)\](.*?)\[/url\]#si',
-						'#\[url=(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si'
+						'#\[url=(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si',
+						'#\[url=/(([\w\-]+\.)*?[\w]+(:[0-9]+)?(/[^ \"\n\r\t<]*)?)\](.*?)\[/url\]#si'
 					);
 				$replace   = array(
 						'[url:'.$this->uid.']$1$2$4[/url:'.$this->uid.']$5',
 						'[url:'.$this->uid.']$1$2[/url:'.$this->uid.']',
 						'[url:'.$this->uid.']http://$1[/url:'.$this->uid.']',
 						'[url=$1$2:'.$this->uid.']$6[/url:'.$this->uid.']',
-						'[url=http://$1:'.$this->uid.']$5[/url:'.$this->uid.']'
+						'[url=http://$1:'.$this->uid.']$5[/url:'.$this->uid.']',
+						'[url=http://montagne-cable.legtux.org/$1:'.$this->uid.']$5[/url:'.$this->uid.']'
+						
 					);
 				$this->str = preg_replace($match, $replace, $this->str);
 			}
